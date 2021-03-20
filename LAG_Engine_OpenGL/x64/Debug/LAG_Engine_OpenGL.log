@@ -1,0 +1,5 @@
+﻿  Application.cpp
+LINK : warning LNK4098: conflit entre la bibliothèque par défaut 'LIBCMT' et les autres bibliothèques ; utilisez /NODEFAULTLIB:library
+LINK : warning LNK4098: conflit entre la bibliothèque par défaut 'MSVCRT' et les autres bibliothèques ; utilisez /NODEFAULTLIB:library
+glew32s.lib(glew.obj) : warning LNK4099: PDB '' n'a pu être trouvé avec 'glew32s.lib(glew.obj)' ou sur '' ; l'objet sera lié sans informations de débogage
+  LAG_Engine_OpenGL.vcxproj -> C:\Users\Wargh_42\Desktop\Cours\Algo\ALGO_OpenGL\Engine_OpenGL\x64\Debug\LAG_Engine_OpenGL.exe
