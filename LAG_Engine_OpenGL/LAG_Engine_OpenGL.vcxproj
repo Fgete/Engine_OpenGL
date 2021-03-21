@@ -24,6 +24,7 @@
     <ProjectGuid>{0c6c393c-7163-47b0-8a76-82c3acbdc584}</ProjectGuid>
     <RootNamespace>LAGEngineOpenGL</RootNamespace>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
+    <ProjectName>Engine_OpenGL</ProjectName>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
