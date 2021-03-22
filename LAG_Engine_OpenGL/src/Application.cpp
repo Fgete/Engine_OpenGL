@@ -3,6 +3,59 @@
 
 #include <malloc.h>
 #include <iostream>
+#include <fstream>
+#include <sstream>
+#include <string>
+
+#define ASSERT(x) if (!(x)) __debugbreak();
+#define GLCall(x) GLClearError();\
+    x;\
+ASSERT(GLLogCall(#x, __FILE__, __LINE__))
+
+// TUTO-10 Errors
+static void GLClearError() {
+    while (glGetError() != GL_NO_ERROR);
+}
+
+static bool GLLogCall(const char* function, const char* file, int line) {
+    while (GLenum error = glGetError()) {
+        std::cout << "[OpenGL Error] (" << error << "): " << function <<  " " << file << ":" << line << std::endl;
+        return false;
+    }
+    return true;
+}
+
+// TUTO-8 21-03-2021
+struct ShaderProgramSource {
+    std::string VertexSource;
+    std::string FragmentSource;
+};
+
+// TUTO-8 21-03-2021 Read shader file then return shader struct
+static ShaderProgramSource ParseShader(const std::string& filepath) {
+    std::ifstream stream(filepath);
+
+    enum class ShaderType {
+        NONE = -1, VERTEX = 0, FRAGMENT = 1
+    };
+
+    std::string line;
+    std::stringstream ss[2];
+    ShaderType type = ShaderType::NONE;
+    while (getline(stream, line)) {
+        if (line.find("#shader") != std::string::npos) {
+            if (line.find("vertex") != std::string::npos)
+                type = ShaderType::VERTEX;
+            else if (line.find("fragment") != std::string::npos)
+                type = ShaderType::FRAGMENT;
+        }
+        else {
+            ss[(int)type] << line << '\n';
+        }
+    }
+
+    return { ss[0].str(), ss[1].str() };
+}
 
 // TUTO-7 21-03-2021 Shader compiler
 static unsigned int CompileShader(unsigned int type, const std::string& source) {
@@ -71,41 +124,34 @@ int main(void)
     std::cout << glGetString(GL_VERSION) << std::endl;
 
     // TUTO-4 21-03-2021 (vertex buffer)
-    float positions[6] = {
-        -0.5f, -0.5f,
-         0.0f,  0.5f,
-         0.5f, -0.5f
+    float positions[] = {
+        -0.5f, -0.5f, // 0
+         0.5f, -0.5f, // 1
+         0.5f,  0.5f, // 2
+        -0.5f,  0.5f  // 3
     };
-    unsigned int buffer; // will be the buffer's id
 
+    unsigned int indices[] = {
+        0, 1, 2,
+        0, 2, 3
+    };
+
+    unsigned int buffer; // will be the buffer's id
     glGenBuffers(1, &buffer); // Generate 1 buffer with (int)buffer id
     glBindBuffer(GL_ARRAY_BUFFER, buffer); // Specify buffer data location
-    glBufferData(GL_ARRAY_BUFFER, 6*sizeof(float), positions, GL_STATIC_DRAW); // Set buffer data and use
+    glBufferData(GL_ARRAY_BUFFER, 6 * 2 * sizeof(float), positions, GL_STATIC_DRAW); // Set buffer data and use
 
     // TUTO-5 21-03-2021 vertex attribute
     glEnableVertexAttribArray(0);
     glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), 0);
 
-    // TUTO-7 21-03-2021
-    std::string vertexShader =
-        "#version 330 core\n"
-        "\n"
-        "layout(location = 0) in vec4 position;\n"
-        "\n"
-        "void main()\n"
-        "{\n"
-        "   gl_Position = position;\n"
-        "}\n";
-    std::string fragmentShader =
-        "#version 330 core\n"
-        "\n"
-        "layout(location = 0) out vec4 color;\n"
-        "\n"
-        "void main()\n"
-        "{\n"
-        "   color = vec4(1.0, 0.0, 0.0, 1.0);\n"
-        "}\n";
-    unsigned int shader = CreateShader(vertexShader, fragmentShader);
+    unsigned int ibo; // index buffer object
+    glGenBuffers(1, &ibo); // Generate 1 buffer with (int)buffer id
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo); // Specify buffer data location
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, 6 * sizeof(unsigned int), indices, GL_STATIC_DRAW); // Set buffer data and use
+
+    ShaderProgramSource source = ParseShader("res/shaders/Basic.shader");
+    unsigned int shader = CreateShader(source.VertexSource, source.FragmentSource);
     glUseProgram(shader);
 
     /* Loop until the user closes the window */
@@ -114,17 +160,8 @@ int main(void)
         /* Render here */
         glClear(GL_COLOR_BUFFER_BIT);
 
-        // TUTO-2 20-03-2021 (test triangle)
-        /*
-        glBegin(GL_TRIANGLES);
-        glVertex2f(-.5f, -.5f);
-        glVertex2f( .0f,  .5f);
-        glVertex2f( .5f, -.5f);
-        glEnd();
-        */
-
-        // TUTO-4 21-03-2021
-        glDrawArrays(GL_TRIANGLES, 0, 3);
+        // TUTO-9 22-03-2021
+        GLCall(glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr));
 
         /* Swap front and back buffers */
         glfwSwapBuffers(window);
